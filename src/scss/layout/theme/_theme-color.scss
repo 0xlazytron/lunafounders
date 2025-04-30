@@ -1,0 +1,39 @@
+//background for nav header
+@each $name, $color in $theme_backgrounds {
+  [data-primary="#{$name}"] {
+    @if $name != "color_2" {
+      --primary: #{$color};
+      --secondary: #{$secondary};
+      --primary-hover: #{darken($color, 10)};
+      --primary-dark: #{darken($color, 30)};
+      --rgba-primary-1: #{rgba($color, 0.1)};
+      --rgba-primary-2: #{rgba($color, 0.2)};
+      --rgba-primary-3: #{rgba($color, 0.3)};
+      --rgba-primary-4: #{rgba($color, 0.4)};
+      --rgba-primary-5: #{rgba($color, 0.5)};
+      --rgba-primary-6: #{rgba($color, 0.6)};
+      --rgba-primary-7: #{rgba($color, 0.7)};
+      --rgba-primary-8: #{rgba($color, 0.8)};
+      --rgba-primary-9: #{rgba($color, 0.9)};
+    }
+  }
+}
+
+[data-primary="color_16"] {
+  --primary: #760404; /* Ana koyu kırmızı */
+  --primary-hover: #a30606; /* Biraz daha açık kırmızı */
+  --primary-dark: #4d0303; /* Daha koyu kırmızı tonu */
+
+  --secondary: #a64304; /* Pas turuncusu, kırmızıya yakın */
+  --secondary-light: #e06000; /* Sıcak açık turuncu, vurgu rengi */
+
+  --rgba-primary-1: rgba(118, 4, 4, 0.1);
+  --rgba-primary-2: rgba(118, 4, 4, 0.2);
+  --rgba-primary-3: rgba(118, 4, 4, 0.3);
+  --rgba-primary-4: rgba(118, 4, 4, 0.4);
+  --rgba-primary-5: rgba(118, 4, 4, 0.5);
+  --rgba-primary-6: rgba(118, 4, 4, 0.6);
+  --rgba-primary-7: rgba(118, 4, 4, 0.7);
+  --rgba-primary-8: rgba(118, 4, 4, 0.8);
+  --rgba-primary-9: rgba(118, 4, 4, 0.9);
+}

@@ -1,0 +1,17 @@
+/* Error: 45vw and 3 are incompatible.
+ *       ,
+ * 12305 |   width: calc(45vw + 3); }
+ *       |               ^^^^^^^^
+ *       '
+ *   src/scss/main.css 12305:15  root stylesheet */
+
+body::before {
+  font-family: "Source Code Pro", "SF Mono", Monaco, Inconsolata, "Fira Mono",
+      "Droid Sans Mono", monospace, monospace;
+  white-space: pre;
+  display: block;
+  padding: 1em;
+  margin-bottom: 1em;
+  border-bottom: 2px solid black;
+  content: "Error: 45vw and 3 are incompatible.\a       \2577 \a 12305 \2502    width: calc(45vw + 3); }\d\a       \2502                ^^^^^^^^\a       \2575 \a   src/scss/main.css 12305:15  root stylesheet";
+}
