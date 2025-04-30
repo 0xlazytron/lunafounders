@@ -5,10 +5,20 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      stream: "stream-browserify", // Alias stream to stream-browserify
+      crypto: 'crypto-browserify',
+      stream: 'stream-browserify',
+      assert: 'assert',
+      http: 'stream-http',
+      https: 'https-browserify',
+      os: 'os-browserify',
+      url: 'url'
     },
   },
   optimizeDeps: {
     include: ["stream"], // Ensure stream is bundled during development
   },
+  define: {
+    'process.env': {},
+    global: 'globalThis'
+  }
 });
