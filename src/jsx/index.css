@@ -1,3 +1,5 @@
+@import url("https://fonts.googleapis.com/css?family=Lato");
+
 .testimonial-one img {
   display: unset !important;
   width: 90%;
@@ -307,7 +309,6 @@ rect#chart_ChartBorder {
 .pagination {
   margin-bottom: 0 !important;
 }
-@import url("https://fonts.googleapis.com/css?family=Lato");
 .rc-backdrop {
   position: fixed;
   top: 0;
@@ -501,7 +502,6 @@ button.react-calendar__tile.react-calendar__month-view__days__day {
   font-family: "poppins", sans-serif;
 }
 button.react-calendar__navigation__label {
-  /* padding: 20px 15px; */
   border-radius: 1.75rem !important;
   font-size: 20px;
 }
@@ -509,25 +509,17 @@ button.react-calendar__navigation__label:hover {
   color: white !important;
   background: #eeeeee !important;
 }
-button.react-calendar__navigation__label:hover > span {
-  /* color: white !important; */
-  /* background: #EEEEEE !important; */
-}
+
 .react-calendar__navigation button:enabled:hover,
-.react-calendar__navigation button:enabled:focus,
-.react-calendar__navigation__label:hover > span {
-  /* background-color: #eeeeee !important; */
-  /* color: white; */
-  /* border-radius: 50%; */
+.react-calendar__navigation button:enabled:focus {
+  background-color: #eeeeee !important;
 }
+
 .react-calendar__tile:enabled:hover,
 .react-calendar__tile:enabled:focus,
 .react-calendar__tile--hasActive,
-.react-calendar__navigation button[disabled],
-.react-calendar__navigation button[disabled] > span {
+.react-calendar__navigation button[disabled] {
   background-color: #eeeeee !important;
-
-  /* color: white; */
 }
 button.react-calendar__tile.react-calendar__tile--now.react-calendar__month-view__days__day,
 button.react-calendar__tile.react-calendar__tile--active.react-calendar__tile--range.react-calendar__tile--rangeStart.react-calendar__tile--rangeEnd.react-calendar__tile--rangeBothEnds.react-calendar__month-view__days__day {
