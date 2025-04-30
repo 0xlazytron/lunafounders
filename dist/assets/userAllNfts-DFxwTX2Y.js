@@ -1,1 +1,0 @@
-import{e as a,f as e}from"./index-KSLeK6lx.js";const o=a(s=>({allNfts:[],fetchAllNfts:async()=>{try{const t=await e.get("/all-nfts");return s({allNfts:t.data}),t.data}catch(t){console.error(t)}}}));export{o as u};

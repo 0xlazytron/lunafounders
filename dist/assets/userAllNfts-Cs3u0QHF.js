@@ -1,0 +1,1 @@
+import{e as a,f as e}from"./index-Be4i-NhT.js";const o=a(s=>({allNfts:[],fetchAllNfts:async()=>{try{const t=await e.get("/all-nfts");return s({allNfts:t.data}),t.data}catch(t){console.error(t)}}}));export{o as u};
