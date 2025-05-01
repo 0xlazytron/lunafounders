@@ -109,9 +109,35 @@ function Dashboard() {
 
   const handleMint = async (nft) => {
     if (!wallet.connected) {
+      const errorMessage = "Please connect your wallet to mint NFTs.";
+      toast.error(
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{ fontSize: '24px', color: '#ff4444' }}>
+            <FaWallet />
+          </div>
+          <div>
+            <p style={{ margin: 0, fontWeight: 'bold' }}>Wallet Not Connected</p>
+            <p style={{ margin: 0, marginTop: '4px' }}>{errorMessage}</p>
+          </div>
+        </div>,
+        {
+          duration: 6000,
+          position: "bottom-center",
+          style: {
+            background: '#1a1a1a',
+            color: '#fff',
+            border: '1px solid #333',
+            padding: '16px',
+            borderRadius: '8px',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+            minWidth: '300px'
+          },
+        }
+      );
+      
       setErrorDetails({
         title: "Wallet Not Connected",
-        message: "Please connect your wallet to mint NFTs."
+        message: errorMessage
       });
       setShowErrorModal(true);
       return;
@@ -125,18 +151,25 @@ function Dashboard() {
     });
 
     try {
+      console.log("🚀 Starting mint process for NFT:", nft);
       const result = await mintFromCandyMachine(
         {
+          // luna ticket
           publicKey: "9g8ynnK5pU7ZaUaLCFQzTxphbjuq3ft7hevjjiUecpv7",
           authority: "FtDmv1nGYogeHtGmQaLBfzQ279WKMn3FeBnbhagP1Xpz",
           collectionMint: "8FgU28VXR9dArA3gaBp9ZWLTefpBktVLs9Hxz3qe7hum",
           version: 1,
+          // publicKey: "2P87rqSceFcF31qVYsAHHY11uxb4YgWGp4ahTGPTwvpb",
+          // authority: "FtDmv1nGYogeHtGmQaLBfzQ279WKMn3FeBnbhagP1Xpz",
+          // collectionMint: "DmmJyasQEDQKpubTJu71LJmBY9bLTAXffhWXC6Z5YRsJ",
+          // version: 1,
         },
         wallet
       );
 
-      console.log("Mint successful:", result);
+      console.log("✅ Mint successful:", result);
 
+      // Update status first
       setMintingStatus({
         loading: false,
         error: null,
@@ -147,74 +180,66 @@ function Dashboard() {
       // Refresh NFT list after successful mint
       await fetchAllNfts();
       
-      // Success toast with explorer link
-      toast(
-        (t) => (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div style={{ fontSize: '24px', color: '#4CAF50' }}>
-              <FaCheckCircle />
+      // Force show the success toast with a slight delay to ensure it appears
+      setTimeout(() => {
+        toast.custom(
+          (t) => (
+            <div 
+              style={{
+                backgroundColor: '#1a1a1a',
+                color: '#fff',
+                padding: '16px',
+                borderRadius: '8px',
+                border: '1px solid #333',
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                minWidth: '300px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px'
+              }}
+              onClick={() => toast.dismiss(t.id)}
+            >
+              <div style={{ fontSize: '24px', color: '#4CAF50' }}>
+                <FaCheckCircle />
+              </div>
+              <div>
+                <p style={{ margin: 0, marginBottom: '8px', fontWeight: 'bold' }}>NFT minted successfully! 🎉</p>
+                <a 
+                  href={result.explorerLink}
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  style={{
+                    color: '#4CAF50',
+                    textDecoration: 'underline',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '5px'
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    window.open(result.explorerLink, '_blank');
+                  }}
+                >
+                  View on Solana Explorer <FaExternalLinkAlt size={12} />
+                </a>
+              </div>
             </div>
-            <div>
-              <p style={{ margin: 0, marginBottom: '8px' }}>NFT minted successfully! 🎉</p>
-              <a 
-                href={getExplorerLink(result.signature)} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                style={{
-                  color: '#4CAF50',
-                  textDecoration: 'underline',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '5px'
-                }}
-              >
-                View on Solana Explorer <FaExternalLinkAlt size={12} />
-              </a>
-            </div>
-          </div>
-        ),
-        {
-          duration: 6000,
-          position: "bottom-center",
-          style: {
-            background: '#1a1a1a',
-            color: '#fff',
-            border: '1px solid #333',
-            padding: '16px',
-          },
-        }
-      );
+          ),
+          {
+            id: 'mint-success-' + Date.now(), // Unique ID for each toast
+            duration: 6000,
+            position: "bottom-center",
+          }
+        );
+      }, 100); // Small delay to ensure toast appears after state updates
       
     } catch (err) {
-      console.error("Mint error:", err);
+      console.error("❌ Mint error:", err);
       
-      let errorTitle = "Minting Failed";
-      let errorMessage = err.message || "Failed to mint NFT";
+      const errorTitle = "Minting Failed";
+      const errorMessage = err.message || "Failed to mint NFT";
       
-      // Handle specific error cases
-      if (errorMessage.includes("insufficient funds")) {
-        errorTitle = "Insufficient Funds";
-        errorMessage = "You don't have enough funds to complete the mint. Please check your SOL and USDT balance.";
-      } else if (errorMessage.includes("not live")) {
-        errorTitle = "Minting Not Live";
-        errorMessage = "The minting period has not started yet. Please try again later.";
-      } else if (errorMessage.includes("wallet not connected")) {
-        errorTitle = "Wallet Not Connected";
-        errorMessage = "Please connect your wallet to mint NFTs.";
-      } else if (errorMessage.includes("Invalid address")) {
-        errorTitle = "Configuration Error";
-        errorMessage = "There's an issue with the Candy Machine configuration. Please contact support.";
-      } else if (err.name === "WalletSignTransactionError") {
-        if (err.message.includes("User rejected")) {
-          errorTitle = "Transaction Rejected";
-          errorMessage = "You rejected the transaction. Please try again if you'd like to mint.";
-        } else {
-          errorTitle = "Transaction Error";
-          errorMessage = "Failed to sign the transaction. Please try again.";
-        }
-      }
-
       setMintingStatus({
         loading: false,
         error: errorMessage,
@@ -222,11 +247,53 @@ function Dashboard() {
         nftId: null
       });
 
+      // Force show the error toast
+      toast.custom(
+        (t) => (
+          <div 
+            style={{
+              backgroundColor: '#1a1a1a',
+              color: '#fff',
+              padding: '16px',
+              borderRadius: '8px',
+              border: '1px solid #ff4444',
+              boxShadow: '0 4px 12px rgba(255, 68, 68, 0.15)',
+              minWidth: '300px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px'
+            }}
+            onClick={() => toast.dismiss(t.id)}
+          >
+            <div style={{ fontSize: '24px', color: '#ff4444' }}>
+              <FaTimesCircle />
+            </div>
+            <div>
+              <p style={{ margin: 0, fontWeight: 'bold' }}>{errorTitle}</p>
+              <p style={{ margin: 0, marginTop: '4px' }}>{errorMessage}</p>
+            </div>
+          </div>
+        ),
+        {
+          id: 'mint-error-' + Date.now(), // Unique ID for each toast
+          duration: 6000,
+          position: "bottom-center",
+        }
+      );
+
       setErrorDetails({
         title: errorTitle,
         message: errorMessage
       });
       setShowErrorModal(true);
+    } finally {
+      // Ensure loading state is reset even if there's an error
+      if (mintingStatus.loading) {
+        setMintingStatus(prev => ({
+          ...prev,
+          loading: false
+        }));
+      }
     }
   };
 
