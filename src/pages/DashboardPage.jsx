@@ -2,7 +2,7 @@ import React, { Fragment, useContext, useEffect, useRef, useState } from "react"
 import loadable from "@loadable/component";
 import pMinDelay from "p-min-delay";
 import { Link } from "react-router-dom";
-import { Button, Card, Dropdown, Nav, Row, Tab, Table } from "react-bootstrap";
+import { Button, Card, Dropdown, Nav, Row, Tab, Table, Modal } from "react-bootstrap";
 import { letestBlog } from "../jsx/components/Karciz/Dashboard/HomePageData";
 import { ThemeContext } from "../context/ThemeContext";
 import userLogo from "../images/UserVector.png";
@@ -17,6 +17,16 @@ import useUserAllNftsStore from "../store/userAllNfts";
 import { mintFromCandyMachine } from "../services/MintService";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { toast } from "react-hot-toast";
+import { 
+  FaWallet, 
+  FaExclamationTriangle, 
+  FaCheckCircle, 
+  FaTimesCircle, 
+  FaCoins, 
+  FaClock, 
+  FaCog, 
+  FaExternalLinkAlt 
+} from 'react-icons/fa';
 
 const HomeSalesRevenueChart = loadable(() =>
   pMinDelay(
@@ -35,6 +45,8 @@ function Dashboard() {
     success: false,
     nftId: null
   });
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorDetails, setErrorDetails] = useState({ title: "", message: "" });
 
   useEffect(() => {
     changeBackground({ value: "dark", label: "Dark" });
@@ -88,9 +100,20 @@ function Dashboard() {
         nft.metadata.animation_url || nft.metadata.image || "/placeholder.svg"
     );
 
+  const handleCloseErrorModal = () => setShowErrorModal(false);
+
+  const getExplorerLink = (signature) => {
+    const baseUrl = "https://solscan.io/tx/";
+    return `${baseUrl}${signature}`;
+  };
+
   const handleMint = async (nft) => {
     if (!wallet.connected) {
-      toast.error("Please connect your wallet first");
+      setErrorDetails({
+        title: "Wallet Not Connected",
+        message: "Please connect your wallet to mint NFTs."
+      });
+      setShowErrorModal(true);
       return;
     }
 
@@ -102,43 +125,182 @@ function Dashboard() {
     });
 
     try {
-      const { mint, signature, metadata } = await mintFromCandyMachine(
+      const result = await mintFromCandyMachine(
         {
-          publicKey: "5MYS3ZS4aUUM61qmLHqY5k6LY6gmkt429K9JAPA7Gmv5",
+          publicKey: "9g8ynnK5pU7ZaUaLCFQzTxphbjuq3ft7hevjjiUecpv7",
           authority: "FtDmv1nGYogeHtGmQaLBfzQ279WKMn3FeBnbhagP1Xpz",
-          collectionMint: "AMT8NTPppueqZcpjw4VGKdjSL7phUx3GYkY1v7m3FgCo",
+          collectionMint: "8FgU28VXR9dArA3gaBp9ZWLTefpBktVLs9Hxz3qe7hum",
           version: 1,
         },
         wallet
       );
 
+      console.log("Mint successful:", result);
+
       setMintingStatus({
         loading: false,
         error: null,
         success: true,
-        nftId: mint
+        nftId: result.mint
       });
 
       // Refresh NFT list after successful mint
       await fetchAllNfts();
       
-      toast.success("NFT minted successfully!");
+      // Success toast with explorer link
+      toast(
+        (t) => (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{ fontSize: '24px', color: '#4CAF50' }}>
+              <FaCheckCircle />
+            </div>
+            <div>
+              <p style={{ margin: 0, marginBottom: '8px' }}>NFT minted successfully! 🎉</p>
+              <a 
+                href={getExplorerLink(result.signature)} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                style={{
+                  color: '#4CAF50',
+                  textDecoration: 'underline',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '5px'
+                }}
+              >
+                View on Solana Explorer <FaExternalLinkAlt size={12} />
+              </a>
+            </div>
+          </div>
+        ),
+        {
+          duration: 6000,
+          position: "bottom-center",
+          style: {
+            background: '#1a1a1a',
+            color: '#fff',
+            border: '1px solid #333',
+            padding: '16px',
+          },
+        }
+      );
       
     } catch (err) {
       console.error("Mint error:", err);
+      
+      let errorTitle = "Minting Failed";
+      let errorMessage = err.message || "Failed to mint NFT";
+      
+      // Handle specific error cases
+      if (errorMessage.includes("insufficient funds")) {
+        errorTitle = "Insufficient Funds";
+        errorMessage = "You don't have enough funds to complete the mint. Please check your SOL and USDT balance.";
+      } else if (errorMessage.includes("not live")) {
+        errorTitle = "Minting Not Live";
+        errorMessage = "The minting period has not started yet. Please try again later.";
+      } else if (errorMessage.includes("wallet not connected")) {
+        errorTitle = "Wallet Not Connected";
+        errorMessage = "Please connect your wallet to mint NFTs.";
+      } else if (errorMessage.includes("Invalid address")) {
+        errorTitle = "Configuration Error";
+        errorMessage = "There's an issue with the Candy Machine configuration. Please contact support.";
+      } else if (err.name === "WalletSignTransactionError") {
+        if (err.message.includes("User rejected")) {
+          errorTitle = "Transaction Rejected";
+          errorMessage = "You rejected the transaction. Please try again if you'd like to mint.";
+        } else {
+          errorTitle = "Transaction Error";
+          errorMessage = "Failed to sign the transaction. Please try again.";
+        }
+      }
+
       setMintingStatus({
         loading: false,
-        error: err.message || "Failed to mint NFT",
+        error: errorMessage,
         success: false,
         nftId: null
       });
-      
-      toast.error(err.message || "Failed to mint NFT", {
-        duration: 5000,
-        position: "bottom-center",
+
+      setErrorDetails({
+        title: errorTitle,
+        message: errorMessage
       });
+      setShowErrorModal(true);
     }
   };
+
+  // Add this modal component to your JSX return statement
+  const getErrorIcon = (title) => {
+    switch (title) {
+      case "Wallet Not Connected":
+        return <FaWallet size={24} />;
+      case "Insufficient Funds":
+        return <FaCoins size={24} />;
+      case "Minting Not Live":
+        return <FaClock size={24} />;
+      case "Configuration Error":
+        return <FaCog size={24} />;
+      case "Transaction Rejected":
+      case "Transaction Error":
+        return <FaTimesCircle size={24} />;
+      default:
+        return <FaExclamationTriangle size={24} />;
+    }
+  };
+
+  const errorModal = (
+    <Modal
+      show={showErrorModal}
+      onHide={handleCloseErrorModal}
+      centered
+      className="custom-modal"
+    >
+      <Modal.Header 
+        closeButton
+        style={{
+          background: '#1a1a1a',
+          color: '#fff',
+          border: 'none'
+        }}
+      >
+        <Modal.Title style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <span style={{ color: '#ff6b6b' }}>
+            {getErrorIcon(errorDetails.title)}
+          </span>
+          {errorDetails.title}
+        </Modal.Title>
+      </Modal.Header>
+      <Modal.Body
+        style={{
+          background: '#1a1a1a',
+          color: '#fff',
+          padding: '20px'
+        }}
+      >
+        <p>{errorDetails.message}</p>
+      </Modal.Body>
+      <Modal.Footer
+        style={{
+          background: '#1a1a1a',
+          border: 'none',
+          padding: '20px'
+        }}
+      >
+        <Button 
+          variant="secondary" 
+          onClick={handleCloseErrorModal}
+          style={{
+            background: 'linear-gradient(to right, #f0f0f0, rgb(139, 137, 137))',
+            border: 'none',
+            padding: '8px 20px'
+          }}
+        >
+          Close
+        </Button>
+      </Modal.Footer>
+    </Modal>
+  );
 
   return (
     <Fragment>
@@ -418,11 +580,6 @@ function Dashboard() {
                     "Mint"
                   )}
                 </Button>
-                {mintingStatus.error && (
-                  <small className="text-danger mt-1 text-center" style={{maxWidth: "200px"}}>
-                    {mintingStatus.error}
-                  </small>
-                )}
               </div>
             ))}
           </div>
@@ -517,6 +674,7 @@ function Dashboard() {
           </div>
         </div>
       </div>
+      {errorModal}
     </Fragment>
   );
 }
